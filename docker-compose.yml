@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  kokoro-web:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    ports:
+      - "8880:8880"
+    environment:
+      - KW_SECRET_API_KEY=your-api-key
+    volumes:
+      - ./kokoro-cache:/kokoro/cache
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # app:
+  #   build: .
+  #   ports:
+  #     - "3001:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #     - ./medias:/app/medias
+  #   environment:
+  #     - NODE_ENV=development
+  #   command: npm run dev
+  #   networks:
+  #     - app-network
+
+volumes:
+  configs-data: {}
+networks:
+  app-network:
+    driver: bridge
