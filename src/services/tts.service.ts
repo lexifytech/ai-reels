@@ -1,25 +1,27 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  TtsOptions,
+  TtsRequestPayload,
+  TtsRequestConfig,
+} from '../types/tts.types';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TtsService {
-  constructor(private readonly httpService: HttpService) {}
+  private readonly audioDir: string;
 
-  async generateSpeech(options: {
-    input: string;
-    voice?: string;
-    response_format?: string;
-    download_format?: string;
-    stream?: boolean;
-    speed?: number;
-    return_download_link?: boolean;
-    lang_code?: string;
-  }): Promise<string> {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.audioDir = path.join(process.cwd(), 'medias', 'audios');
+  }
+
+  async textToSpeech(options: TtsOptions): Promise<string> {
     const {
       input,
       voice = 'am_adam(0.1)',
@@ -32,38 +34,37 @@ export class TtsService {
     } = options;
 
     try {
+      const payload: TtsRequestPayload = {
+        voice,
+        download_format,
+        stream,
+        input,
+        return_download_link,
+        lang_code,
+        response_format,
+        speed,
+      };
+
+      const config: TtsRequestConfig = {
+        responseType: 'arraybuffer',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: this.configService.get('KOKORO_API_KEY') || '',
+        },
+      };
+
       const response = await this.httpService
-        .post(
-          'http://0.0.0.0:8880/v1/audio/speech',
-          {
-            voice,
-            download_format,
-            stream,
-            input,
-            return_download_link,
-            lang_code,
-            response_format,
-            speed,
-          },
-          {
-            responseType: 'arraybuffer',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: process.env.KOKORO_API_KEY || '',
-            },
-          },
-        )
+        .post('http://0.0.0.0:8880/v1/audio/speech', payload, config)
         .toPromise();
 
       const bufferRes = Buffer.from(response?.data);
-      const tempDir = path.join(process.cwd(), 'medias', 'downloaded_audios');
-      await fs.promises.mkdir(tempDir, { recursive: true });
-      const audioPath = path.join(tempDir, 'audio.mp3');
-      fs.writeFileSync(audioPath, bufferRes);
+      await fs.promises.mkdir(this.audioDir, { recursive: true });
+      const audioPath = path.join(this.audioDir, 'audio.mp3');
+      await fs.promises.writeFile(audioPath, bufferRes);
 
       return audioPath;
     } catch (error) {
-      throw new Error(`Erro ao gerar áudio: ${error.message}`);
+      throw new Error(`Erro ao gerar áudio: ${(error as Error).message}`);
     }
   }
 }

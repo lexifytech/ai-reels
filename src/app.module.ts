@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
 import { VideoModule } from './video/video.module';
 
 @Module({
-  imports: [VideoModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // torna as variáveis de ambiente disponíveis globalmente
+    }),
+    VideoModule,
+  ],
 })
 export class AppModule {}
