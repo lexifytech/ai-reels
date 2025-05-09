@@ -28,7 +28,7 @@ export class TtsService {
       response_format = 'mp3',
       download_format = 'mp3',
       stream = true,
-      speed = 1.3,
+      speed = 1,
       return_download_link = true,
       lang_code = 'p',
     } = options;

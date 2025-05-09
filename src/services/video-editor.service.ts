@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import * as videoshow from 'videoshow';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as path from 'path';
-import * as fs from 'fs';  // Added fs import
+import * as fs from 'fs';
 import { VideoOptions, VideoShowInstance } from '../types/video-editor.types';
 
 @Injectable()
@@ -37,12 +37,13 @@ export class VideoEditorService {
         }
 
         const audioDuration = metadata.format.duration;
-        const frameDuration = Math.floor(audioDuration / imagesPath.length);
+        // Adiciona um pequeno buffer para garantir que o vídeo cubra todo o áudio
+        const frameDuration = Math.ceil(audioDuration / imagesPath.length) + 0.0003;
 
         const videoOptions = {
           fps: 30,
           loop: frameDuration,
-          transition: false, // Disable transitions temporarily
+          transition: false,
           videoBitrate: '2000k',
           videoCodec: 'libx264',
           size: '1080x1920',
@@ -51,7 +52,7 @@ export class VideoEditorService {
           format: 'mp4',
           pixelFormat: 'yuv420p',
           outputOptions: [
-            '-preset', 'ultrafast', // Use ultrafast preset for testing
+            '-preset', 'ultrafast',
             '-movflags', '+faststart',
             '-profile:v', 'baseline',
             '-pix_fmt', 'yuv420p',
@@ -61,7 +62,7 @@ export class VideoEditorService {
 
         videoshow(imagesPath, videoOptions)
           .audio(audioPath)
-          .save('medias/video.mp4')
+          .save(path.join(this.outputDir, 'video.mp4'))
           .on('start', (command: any) => {
             console.log('FFmpeg process started:', command);
           })

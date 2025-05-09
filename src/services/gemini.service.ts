@@ -50,7 +50,7 @@ export class GeminiService {
         },
       });
 
-      const prompt = `Crie um roteiro de vídeo curto com teor mal humorado, e irônico para redes sociais (reels) em pt-BR separado em quadros (frames) para o tema '${theme}'. O vídeo deve ter apenas 5 frames e com duração média de 40 segundos.`;
+      const prompt = `Crie uma poesia (apenas o texto para uma api de tts) com rima com teor mal humorado, irônico, engraçado, e ácido para redes sociais (reels) em pt-BR separado em quadros (frames) para o tema '${theme}'. O vídeo deve ter apenas 5 frames e com duração média de 40 segundos.`;
       const iaOptions = {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       };
